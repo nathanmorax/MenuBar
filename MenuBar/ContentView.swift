@@ -11,11 +11,13 @@ import SwiftUI
 struct MenuItem: View {
     let icon: String
     let title: String
+    var color: Color? = .gray
     
     var body: some View {
         HStack {
             Image(systemName: icon)
                 .frame(width: 20)
+                .foregroundColor(tint)
             Text(title)
         }
         .padding(.vertical, 12)
@@ -24,6 +26,7 @@ struct MenuItem: View {
         .contentShape(Rectangle())
     }
 }
+
 
 struct Separator: View {
     var body: some View {
@@ -49,10 +52,11 @@ struct ContentView: View {
             }
             .padding()
             
+            Spacer()
+            
             Separator()
 
-            MenuItem(icon: "arrow.uturn.backward", title: "Undo")
-            MenuItem(icon: "arrow.uturn.forward", title: "Redo")
+            MenuItem(icon: "checkmark.circle.fill", title: "Connecting to iPhone", color: .green)
             
             Separator()
             
