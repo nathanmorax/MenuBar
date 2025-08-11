@@ -1,73 +1,68 @@
-//
-//  ContentView.swift
-//  MenuBar
-//
-//  Created by Jonathan Mora on 10/08/25.
-//
 
 import SwiftUI
 
-
-struct MenuItem: View {
-    let icon: String
-    let title: String
-    var color: Color? = .gray
-    
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .frame(width: 20)
-                .foregroundColor(tint)
-            Text(title)
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-    }
-}
-
-
-struct Separator: View {
-    var body: some View {
-        Rectangle()
-            .frame(height: 1)
-            .foregroundStyle(.white.opacity(0.2))
-            .padding(.horizontal, 8)
-    }
-}
-
 struct ContentView: View {
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 14) {
             
-            HStack {
+            HStack(spacing: 8) {
                 Image(systemName: "iphone.gen1")
-                    .resizable()
-                    .frame(maxWidth: 12, maxHeight: 18)
-                
-                Text("MacRemote Classic")
+                    .font(.title)
+                Text("iPod Sync")
+                    .font(.headline)
                     .fontWeight(.bold)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding()
-            
-            Spacer()
-            
-            Separator()
 
-            MenuItem(icon: "checkmark.circle.fill", title: "Connecting to iPhone", color: .green)
-            
-            Separator()
-            
-            MenuItem(icon: "power", title: "Turn Off")
+            let buttonHeight: CGFloat = 40
+
+            HStack(spacing: 10) {
+                Button(action: {
+                    print("Botón de estado presionado.")
+                }) {
+                    HStack {
+                        Text("iPhone conectado")
+                            .fontWeight(.medium)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                }
+                .frame(maxWidth: .infinity, minHeight: buttonHeight)
+                .buttonStyle(.plain)
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+
+                Button(action: {
+                    print("Botón de apagar presionado.")
+                    NSApplication.shared.terminate(nil)
+                }) {
+                    HStack {
+                        Image(systemName: "power")
+                        Text("Apagar")
+                            .fontWeight(.medium)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                }
+                .frame(maxWidth: .infinity, minHeight: buttonHeight)
+                .buttonStyle(.plain)
+                .background(Color(NSColor.controlBackgroundColor))
+                .foregroundColor(Color(NSColor.controlTextColor))
+                .cornerRadius(8)
+            }
+
+
+
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+            .frame(width: 290, height: 110)
+    }
 }
+
