@@ -8,12 +8,12 @@ import SwiftUI
 
 @main
 struct MacApp: App {
-    @StateObject private var bonjourService = BonjourService()
-
+    let bonjourService = BonjourService()
+    
     init() {
         bonjourService.start()
     }
-
+    
     var body: some Scene {
         MenuBarExtra("Menu Bar Example", systemImage: "iphone.gen1") {
             ContentView()

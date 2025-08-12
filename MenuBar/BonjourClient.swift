@@ -5,49 +5,41 @@
 //  Created by Jonathan Mora on 10/08/25.
 //
 
-import SwiftUI
+import Foundation
 import Network
 
-class BonjourService: ObservableObject {
-    private var netService: NetService?
+class BonjourService: NSObject, NetServiceDelegate {
+    private var service: NetService?
     private var listener: NWListener?
 
     func start() {
-        do {
-            listener = try NWListener(using: .tcp, on: 0)
-            
-            listener?.stateUpdateHandler = { newState in
-                switch newState {
-                case .ready:
-                    if let port = self.listener?.port {
-                        print("Listener listo en puerto: \(port.rawValue)")
-                        // Aquí publicas el servicio Bonjour con el puerto real
-                        self.netService = NetService(domain: "local.", type: "_myremote._tcp.", name: "Mi Mac", port: Int32(port.rawValue))
-                        self.netService?.publish()
-                        print("Servicio Bonjour publicado en puerto \(port.rawValue)")
-                    }
-                case .failed(let error):
-                    print("Listener fallo con error: \(error)")
-                default:
-                    break
-                }
-            }
+        let fixedPort: NWEndpoint.Port = 50505
 
-            listener?.newConnectionHandler = { connection in
+        do {
+            listener = try NWListener(using: .tcp, on: fixedPort)
+            listener?.newConnectionHandler = { [weak self] connection in
                 connection.start(queue: .main)
-                print("Nueva conexión recibida")
+                self?.receive(on: connection)
             }
-            
             listener?.start(queue: .main)
 
+            service = NetService(domain: "local.", type: "_ipodsync._tcp.", name: "MacController", port: Int32(fixedPort.rawValue))
+            service?.delegate = self
+            service?.publish()
+            print("Servicio Bonjour publicado en el puerto fijo \(fixedPort)")
         } catch {
-            print("Error creando listener: \(error)")
+            print("Error al iniciar el listener en puerto fijo: \(error)")
         }
     }
 
-
-    func stop() {
-        netService?.stop()
-        listener?.cancel()
+    private func receive(on connection: NWConnection) {
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 1024) { data, _, _, _ in
+            if let data = data, let message = String(data: data, encoding: .utf8) {
+                print("Mensaje recibido: \(message)")
+                if message == "shutdown" {
+                   // NSApplication.shared.terminate(nil)
+                }
+            }
+        }
     }
 }
