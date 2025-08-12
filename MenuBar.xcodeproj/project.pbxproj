@@ -10,9 +10,22 @@
 		2D31BF1D2E498C970070EE3F /* MenuBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MenuBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2DFC16BA2E4BFAB400288178 /* Exceptions for "MenuBar" folder in "MenuBar" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2D31BF1C2E498C970070EE3F /* MenuBar */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2D31BF1F2E498C970070EE3F /* MenuBar */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2DFC16BA2E4BFAB400288178 /* Exceptions for "MenuBar" folder in "MenuBar" target */,
+			);
 			path = MenuBar;
 			sourceTree = "<group>";
 		};
@@ -268,6 +281,7 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MenuBar/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Necesitamos acceso a la red local para descubrir dispositivos.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -307,6 +321,7 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MenuBar/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Necesitamos acceso a la red local para descubrir dispositivos.";
 				LD_RUNPATH_SEARCH_PATHS = (
