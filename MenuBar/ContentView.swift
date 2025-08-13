@@ -2,6 +2,9 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @ObservedObject var bonjour = BonjourService()
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             
@@ -12,33 +15,30 @@ struct ContentView: View {
                     .font(.headline)
                     .fontWeight(.bold)
             }
-
+            
             let buttonHeight: CGFloat = 40
-
+            
             HStack(spacing: 10) {
+                
+                Text(bonjour.isConnected ? "iPhone Encendido" : "iPhone Desconetado")
+                    .fontWeight(.medium)
+                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.plain)
+                    .background(bonjour.isConnected ? Color.green : Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                
                 Button(action: {
-                    print("Botón de estado presionado.")
-                }) {
-                    HStack {
-                        Text("iPhone conectado")
-                            .fontWeight(.medium)
+                    if bonjour.listener == nil {
+                        bonjour.start()
+                    } else {
+                        bonjour.stop()
+                        bonjour.isConnected = false
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                }
-                .frame(maxWidth: .infinity, minHeight: buttonHeight)
-                .buttonStyle(.plain)
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(8)
-
-                Button(action: {
-                    print("Botón de apagar presionado.")
-                    NSApplication.shared.terminate(nil)
                 }) {
                     HStack {
-                        Image(systemName: "power")
-                        Text("Apagar")
+                        Image(systemName: bonjour.listener == nil ? "power.circle.fill" : "power")
+                        Text(bonjour.listener == nil ? "Encender" : "Apagar")
                             .fontWeight(.medium)
                     }
                     .padding(.horizontal, 12)
@@ -50,9 +50,7 @@ struct ContentView: View {
                 .foregroundColor(Color(NSColor.controlTextColor))
                 .cornerRadius(8)
             }
-
-
-
+            
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)

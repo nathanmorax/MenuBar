@@ -283,6 +283,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MenuBar/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Esta app necesita controlar Apple Music para reproducir música.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Necesitamos acceso a la red local para descubrir dispositivos.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -324,6 +325,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MenuBar/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Esta app necesita controlar Apple Music para reproducir música.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Necesitamos acceso a la red local para descubrir dispositivos.";
 				LD_RUNPATH_SEARCH_PATHS = (
