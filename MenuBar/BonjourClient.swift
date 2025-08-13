@@ -17,22 +17,24 @@ class BonjourService: NSObject, NetServiceDelegate {
         let fixedPort: NWEndpoint.Port = 50505
 
         do {
-            // CRÍTICO: Configurar parámetros TCP para aceptar conexiones remotas
+            // ✅ Usar parámetros TCP estándar
             let parameters = NWParameters.tcp
-            parameters.acceptLocalOnly = false  // ← Esta es la línea clave que faltaba
-            
-            // Crear listener con parámetros corregidos
+            parameters.allowLocalEndpointReuse = true
+            parameters.acceptLocalOnly = false
+            parameters.includePeerToPeer = true
+
+            // ✅ Crear listener
             listener = try NWListener(using: parameters, on: fixedPort)
-            
+
             listener?.newConnectionHandler = { [weak self] connection in
                 print("📱 Nueva conexión desde: \(connection.endpoint)")
                 self?.handleNewConnection(connection)
             }
-            
+
             listener?.stateUpdateHandler = { state in
                 switch state {
                 case .ready:
-                    print("✅ Servidor TCP listo en puerto 50505 (todas las interfaces)")
+                    print("✅ Servidor TCP listo en puerto 50505 (IPv4 + IPv6 si el sistema lo permite)")
                 case .failed(let error):
                     print("❌ Error del servidor TCP: \(error)")
                 case .cancelled:
@@ -41,19 +43,20 @@ class BonjourService: NSObject, NetServiceDelegate {
                     print("📡 Estado del servidor: \(state)")
                 }
             }
-            
+
             listener?.start(queue: .main)
 
-            // Publicar servicio Bonjour
+            // ✅ Publicar servicio Bonjour
             service = NetService(domain: "local.", type: "_yourservice._tcp", name: "MacController", port: Int32(fixedPort.rawValue))
             service?.delegate = self
             service?.publish()
             print("🔊 Servicio Bonjour publicado en el puerto fijo \(fixedPort)")
-            
+
         } catch {
             print("❌ Error al iniciar el listener en puerto fijo: \(error)")
         }
     }
+
     
     private func handleNewConnection(_ connection: NWConnection) {
         // Agregar a conexiones activas
@@ -112,6 +115,13 @@ class BonjourService: NSObject, NetServiceDelegate {
     
     private func processCommand(_ command: String, from connection: NWConnection) {
         let cmd = command.lowercased()
+        
+        if cmd.hasPrefix("say ") {
+            let mensaje = String(command.dropFirst(4)) // conserva mayúsculas y acentos
+            sendResponse("🗣️ Diciendo: '\(mensaje)'", to: connection)
+            executeSay(mensaje)
+            return
+        }
         
         switch cmd {
         case "ping":
@@ -179,6 +189,14 @@ class BonjourService: NSObject, NetServiceDelegate {
             }
         }
     }
+    
+    private func executeSay(_ mensaje: String) {
+        let proceso = Process()
+        proceso.launchPath = "/usr/bin/say"
+        proceso.arguments = [mensaje]
+        proceso.launch()
+    }
+
     
     private func removeConnection(_ connection: NWConnection) {
         if let index = connections.firstIndex(where: { $0 === connection }) {
