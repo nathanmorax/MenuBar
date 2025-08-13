@@ -7,11 +7,14 @@
 
 import Foundation
 import Network
+import Cocoa
 
-class BonjourService: NSObject, NetServiceDelegate {
+class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
     private var service: NetService?
-    private var listener: NWListener?
+    var listener: NWListener?
     private var connections: [NWConnection] = []
+    @Published var isConnected: Bool = false
+
 
     func start() {
         let fixedPort: NWEndpoint.Port = 50505
@@ -70,10 +73,12 @@ class BonjourService: NSObject, NetServiceDelegate {
                 self?.setupReceive(for: connection)
                 
                 // Enviar mensaje de bienvenida
-                self?.sendResponse("Conectado a Mac - Comandos: ping, shutdown, restart", to: connection)
+                self?.isConnected = true
+                self?.sendResponse("Conectado a Mac ", to: connection)
                 
             case .failed(let error):
                 print("❌ Conexión falló: \(error)")
+                self?.isConnected = false
                 self?.removeConnection(connection)
                 
             case .cancelled:
@@ -139,6 +144,48 @@ class BonjourService: NSObject, NetServiceDelegate {
             let status = "Mac activa - \(connections.count) conexiones activas"
             sendResponse(status, to: connection)
             
+        case "exit":
+            sendResponse("🛑 Cerrando app en la Mac...", to: connection)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                exit(0)
+            }
+        case "open music":
+            sendResponse("🎶 Abriendo Apple Music...", to: connection)
+            openAppDirect(path: "/System/Applications/Music.app")
+
+            
+        case "close music":
+            sendResponse("🛑 Cerrando Apple Music...", to: connection)
+
+        case "play music":
+            sendResponse("▶️ Reproduciendo música...", to: connection)
+            playAppleMusic()
+            
+        case "key code 125": // flecha abajo
+            sendResponse("⬇️ Scroll hacia abajo...", to: connection)
+            simulateKeyPress(code: 125)
+
+        case "key code 126": // flecha arriba
+            sendResponse("⬆️ Scroll hacia arriba...", to: connection)
+            simulateKeyPress(code: 126)
+
+        case "key code 123": // flecha izquierda
+            sendResponse("⬅️ Navegación izquierda...", to: connection)
+            simulateKeyPress(code: 123)
+
+        case "key code 124": // flecha derecha
+            sendResponse("➡️ Navegación derecha...", to: connection)
+            simulateKeyPress(code: 124)
+
+        case "key code 36": // enter
+            sendResponse("⏎ Enter enviado...", to: connection)
+            simulateKeyPress(code: 36)
+
+        case "mouse click":
+            sendResponse("🖱️ Clic izquierdo ejecutado", to: connection)
+            simulateMouseClick()
+
+            
         default:
             sendResponse("❓ Comando no reconocido: '\(command)'. Comandos disponibles: ping, shutdown, restart, status", to: connection)
         }
@@ -196,6 +243,68 @@ class BonjourService: NSObject, NetServiceDelegate {
         proceso.arguments = [mensaje]
         proceso.launch()
     }
+    
+    func openAppDirect(path: String) {
+        let proceso = Process()
+        proceso.launchPath = "/usr/bin/open"
+        proceso.arguments = [path]
+        proceso.launch()
+    }
+    
+    func playAppleMusic() {
+        let script = """
+        
+        tell application "Music"
+            activate
+            delay 1
+            if (exists current track) then
+                play
+            else
+                return "❌ No hay música en la cola."
+            end if
+        end tell
+        """
+
+        let task = Process()
+        task.launchPath = "/usr/bin/osascript"
+        task.arguments = ["-e", script]
+
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.launch()
+        task.waitUntilExit()
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        if let output = String(data: data, encoding: .utf8) {
+            print("🎵 Resultado: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
+        }
+    }
+    
+    func simulateKeyPress(code: CGKeyCode) {
+        let src = CGEventSource(stateID: .hidSystemState)
+        let keyDown = CGEvent(keyboardEventSource: src, virtualKey: code, keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: src, virtualKey: code, keyDown: false)
+        
+        keyDown?.post(tap: .cghidEventTap)
+        keyUp?.post(tap: .cghidEventTap)
+    }
+
+    func simulateMouseClick() {
+        let loc = NSEvent.mouseLocation
+        let screenHeight = NSScreen.main?.frame.height ?? 0
+        let flippedY = screenHeight - loc.y // Convertir a coordenadas de Quartz
+
+        let point = CGPoint(x: loc.x, y: flippedY)
+        let src = CGEventSource(stateID: .hidSystemState)
+
+        let mouseDown = CGEvent(mouseEventSource: src, mouseType: .leftMouseDown, mouseCursorPosition: point, mouseButton: .left)
+        let mouseUp = CGEvent(mouseEventSource: src, mouseType: .leftMouseUp, mouseCursorPosition: point, mouseButton: .left)
+
+        mouseDown?.post(tap: .cghidEventTap)
+        mouseUp?.post(tap: .cghidEventTap)
+    }
+
+
 
     
     private func removeConnection(_ connection: NWConnection) {
