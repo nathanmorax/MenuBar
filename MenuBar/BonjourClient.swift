@@ -185,8 +185,9 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
             sendResponse("🖱️ Clic izquierdo ejecutado", to: connection)
             simulateMouseClick()
             
-        case "back 15":
-            sendResponse("⏪ Retrocedido 15 segundos", to: connection)
+        case "volume up":
+            sendResponse("🔊 Subiendo volumen...", to: connection)
+            adjustVolume(delta: 10) // sube 10%
             
         default:
             sendResponse("❓ Comando no reconocido: '\(command)'. Comandos disponibles: ping, shutdown, restart, status", to: connection)
@@ -304,6 +305,21 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
 
         mouseDown?.post(tap: .cghidEventTap)
         mouseUp?.post(tap: .cghidEventTap)
+    }
+
+    private func adjustVolume(delta: Int) {
+        let script = """
+        set currentVolume to output volume of (get volume settings)
+        set newVolume to currentVolume + \(delta)
+        if newVolume > 100 then set newVolume to 100
+        if newVolume < 0 then set newVolume to 0
+        set volume output volume newVolume
+        """
+        
+        let task = Process()
+        task.launchPath = "/usr/bin/osascript"
+        task.arguments = ["-e", script]
+        task.launch()
     }
 
 
