@@ -184,7 +184,9 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
         case "mouse click":
             sendResponse("🖱️ Clic izquierdo ejecutado", to: connection)
             simulateMouseClick()
-
+            
+        case "back 15":
+            sendResponse("⏪ Retrocedido 15 segundos", to: connection)
             
         default:
             sendResponse("❓ Comando no reconocido: '\(command)'. Comandos disponibles: ping, shutdown, restart, status", to: connection)
