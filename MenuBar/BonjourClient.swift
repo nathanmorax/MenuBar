@@ -121,12 +121,16 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
     private func processCommand(_ command: String, from connection: NWConnection) {
         let cmd = command.lowercased()
         
+        
         if cmd.hasPrefix("say ") {
             let mensaje = String(command.dropFirst(4)) // conserva mayúsculas y acentos
             sendResponse("🗣️ Diciendo: '\(mensaje)'", to: connection)
             executeSay(mensaje)
             return
         }
+        print("📩 Comando recibido:", command)
+        print("📩 Comando procesado:", cmd)
+
         
         switch cmd {
         case "ping":
