@@ -187,7 +187,11 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
             
         case "volume up":
             sendResponse("🔊 Subiendo volumen...", to: connection)
-            adjustVolume(delta: 10) // sube 10%
+            adjustVolume(delta: 20) // sube 20%
+            
+        case "volume down":
+            sendResponse("🔊 Bajando volumen...", to: connection)
+            adjustVolume(delta: -20) // baja 20%
             
         default:
             sendResponse("❓ Comando no reconocido: '\(command)'. Comandos disponibles: ping, shutdown, restart, status", to: connection)
