@@ -316,20 +316,28 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
     }
 
     private func adjustVolume(delta: Int) {
-        let script = """
-        set currentVolume to output volume of (get volume settings)
-        set newVolume to currentVolume + \(delta)
-        if newVolume > 100 then set newVolume to 100
-        if newVolume < 0 then set newVolume to 0
-        set volume output volume newVolume
-        """
-        
-        let task = Process()
-        task.launchPath = "/usr/bin/osascript"
-        task.arguments = ["-e", script]
-        task.launch()
+        if delta > 0 {
+            for _ in 0..<(delta / 5) { 
+                simulateVolumeKeyPress(up: true)
+            }
+        } else if delta < 0 {
+            for _ in 0..<(-delta / 5) {
+                simulateVolumeKeyPress(up: false)
+            }
+        }
     }
 
+
+    private func simulateVolumeKeyPress(up: Bool) {
+        let keyCode: CGKeyCode = up ? 0x48 : 0x49
+        let src = CGEventSource(stateID: .hidSystemState)
+        
+        let keyDown = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false)
+        
+        keyDown?.post(tap: .cghidEventTap)
+        keyUp?.post(tap: .cghidEventTap)
+    }
 
 
     
