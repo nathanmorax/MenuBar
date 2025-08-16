@@ -14,26 +14,26 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
     var listener: NWListener?
     private var connections: [NWConnection] = []
     @Published var isConnected: Bool = false
-
-
+    
+    
     func start() {
         let fixedPort: NWEndpoint.Port = 50505
-
+        
         do {
             // ✅ Usar parámetros TCP estándar
             let parameters = NWParameters.tcp
             parameters.allowLocalEndpointReuse = true
             parameters.acceptLocalOnly = false
             parameters.includePeerToPeer = true
-
+            
             // ✅ Crear listener
             listener = try NWListener(using: parameters, on: fixedPort)
-
+            
             listener?.newConnectionHandler = { [weak self] connection in
                 print("📱 Nueva conexión desde: \(connection.endpoint)")
                 self?.handleNewConnection(connection)
             }
-
+            
             listener?.stateUpdateHandler = { state in
                 switch state {
                 case .ready:
@@ -46,20 +46,20 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
                     print("📡 Estado del servidor: \(state)")
                 }
             }
-
+            
             listener?.start(queue: .main)
-
+            
             // ✅ Publicar servicio Bonjour
             service = NetService(domain: "local.", type: "_yourservice._tcp", name: "MacController", port: Int32(fixedPort.rawValue))
             service?.delegate = self
             service?.publish()
             print("🔊 Servicio Bonjour publicado en el puerto fijo \(fixedPort)")
-
+            
         } catch {
             print("❌ Error al iniciar el listener en puerto fijo: \(error)")
         }
     }
-
+    
     
     private func handleNewConnection(_ connection: NWConnection) {
         // Agregar a conexiones activas
@@ -93,7 +93,7 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
         // Iniciar conexión
         connection.start(queue: .main)
     }
-
+    
     private func setupReceive(for connection: NWConnection) {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 1024) { [weak self] data, context, isComplete, error in
             
@@ -130,7 +130,7 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
         }
         print("📩 Comando recibido:", command)
         print("📩 Comando procesado:", cmd)
-
+        
         
         switch cmd {
         case "ping":
@@ -156,11 +156,11 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
         case "open music":
             sendResponse("🎶 Abriendo Apple Music...", to: connection)
             openAppDirect(path: "/System/Applications/Music.app")
-
+            
             
         case "close music":
             sendResponse("🛑 Cerrando Apple Music...", to: connection)
-
+            
         case "play music":
             sendResponse("▶️ Reproduciendo música...", to: connection)
             playAppleMusic()
@@ -168,34 +168,45 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
         case "key code 125": // flecha abajo
             sendResponse("⬇️ Scroll hacia abajo...", to: connection)
             simulateKeyPress(code: 125)
-
+            
         case "key code 126": // flecha arriba
             sendResponse("⬆️ Scroll hacia arriba...", to: connection)
             simulateKeyPress(code: 126)
-
+            
         case "key code 123": // flecha izquierda
             sendResponse("⬅️ Navegación izquierda...", to: connection)
             simulateKeyPress(code: 123)
-
+            
         case "key code 124": // flecha derecha
             sendResponse("➡️ Navegación derecha...", to: connection)
             simulateKeyPress(code: 124)
-
+            
         case "key code 36": // enter
             sendResponse("⏎ Enter enviado...", to: connection)
             simulateKeyPress(code: 36)
-
+            
         case "mouse click":
             sendResponse("🖱️ Clic izquierdo ejecutado", to: connection)
             simulateMouseClick()
             
         case "volume up":
             sendResponse("🔊 Subiendo volumen...", to: connection)
-            adjustVolume(delta: 20) // sube 20%
+            adjustVolume(delta: 15) // sube 20%
             
         case "volume down":
             sendResponse("🔊 Bajando volumen...", to: connection)
-            adjustVolume(delta: -20) // baja 20%
+            adjustVolume(delta: -15) // baja 20%
+            
+        case "volume up":
+            adjustVolume(delta: 15)
+            let currentVolumeUp = getSystemVolume()
+            sendResponse("🔊 Volumen: \(currentVolumeUp)%", to: connection)
+            
+        case "volume down":
+            adjustVolume(delta: -15)
+            let currentVolumeDown = getSystemVolume()
+            sendResponse("🔉 Volumen: \(currentVolumeDown)%", to: connection)
+            
             
         default:
             sendResponse("❓ Comando no reconocido: '\(command)'. Comandos disponibles: ping, shutdown, restart, status", to: connection)
@@ -275,16 +286,16 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
             end if
         end tell
         """
-
+        
         let task = Process()
         task.launchPath = "/usr/bin/osascript"
         task.arguments = ["-e", script]
-
+        
         let pipe = Pipe()
         task.standardOutput = pipe
         task.launch()
         task.waitUntilExit()
-
+        
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         if let output = String(data: data, encoding: .utf8) {
             print("🎵 Resultado: \(output.trimmingCharacters(in: .whitespacesAndNewlines))")
@@ -299,36 +310,51 @@ class BonjourService: NSObject, NetServiceDelegate, ObservableObject {
         keyDown?.post(tap: .cghidEventTap)
         keyUp?.post(tap: .cghidEventTap)
     }
-
+    
     func simulateMouseClick() {
         let loc = NSEvent.mouseLocation
         let screenHeight = NSScreen.main?.frame.height ?? 0
         let flippedY = screenHeight - loc.y // Convertir a coordenadas de Quartz
-
+        
         let point = CGPoint(x: loc.x, y: flippedY)
         let src = CGEventSource(stateID: .hidSystemState)
-
+        
         let mouseDown = CGEvent(mouseEventSource: src, mouseType: .leftMouseDown, mouseCursorPosition: point, mouseButton: .left)
         let mouseUp = CGEvent(mouseEventSource: src, mouseType: .leftMouseUp, mouseCursorPosition: point, mouseButton: .left)
-
+        
         mouseDown?.post(tap: .cghidEventTap)
         mouseUp?.post(tap: .cghidEventTap)
     }
-
+    
     private func adjustVolume(delta: Int) {
-          let script = """
+        let script = """
           set currentVolume to output volume of (get volume settings)
           set newVolume to currentVolume + \(delta)
           if newVolume > 100 then set newVolume to 100
           if newVolume < 0 then set newVolume to 0
           set volume output volume newVolume
           """
-          
-          let task = Process()
-          task.launchPath = "/usr/bin/osascript"
-          task.arguments = ["-e", script]
-          task.launch()
-      }
+        
+        let task = Process()
+        task.launchPath = "/usr/bin/osascript"
+        task.arguments = ["-e", script]
+        task.launch()
+    }
+    
+    private func getSystemVolume() -> Int {
+        let script = "output volume of (get volume settings)"
+        var error: NSDictionary?
+        if let appleScript = NSAppleScript(source: script) {
+            let output = appleScript.executeAndReturnError(&error)
+            if let error = error {
+                print("❌ Error obteniendo volumen:", error)
+                return -1
+            }
+            return output.int32Value == 0 ? 0 : Int(output.int32Value)
+        }
+        return -1
+    }
+    
     
     private func removeConnection(_ connection: NWConnection) {
         if let index = connections.firstIndex(where: { $0 === connection }) {
